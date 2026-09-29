@@ -1,6 +1,7 @@
 using Controller_Diagnostics_Tool.Models;
 using HidSharp;
 using HidSharp.Reports;
+using System.IO;
 
 namespace Controller_Diagnostics_Tool.Services;
 
@@ -58,12 +59,28 @@ public sealed class ControllerInputService : IDisposable
                 StateChanged?.Invoke(selected.DevicePath, "Live input");
                 var buffer = new byte[Math.Max(1, device.GetMaxInputReportLength())];
                 var lastUpdate = DateTime.MinValue;
+                var lastReport = DateTime.UtcNow;
+                var quiet = false;
                 while (!token.IsCancellationRequested)
                 {
                     int count;
                     try { count = stream.Read(buffer, 0, buffer.Length); }
-                    catch (TimeoutException) { continue; }
-                    if (count <= 0) continue;
+                    catch (TimeoutException)
+                    {
+                        if (!quiet && (DateTime.UtcNow - lastReport).TotalSeconds >= 3)
+                        {
+                            quiet = true;
+                            StateChanged?.Invoke(selected.DevicePath, "No recent input reports");
+                        }
+                        continue;
+                    }
+                    if (count <= 0) throw new EndOfStreamException("Device input stream closed.");
+                    lastReport = DateTime.UtcNow;
+                    if (quiet)
+                    {
+                        quiet = false;
+                        StateChanged?.Invoke(selected.DevicePath, "Live input");
+                    }
                     var report = descriptor.InputReports.FirstOrDefault(r => r.ReportID == buffer[0]);
                     if (report is null || count < report.Length) continue;
                     var controls = new List<InputControl>();

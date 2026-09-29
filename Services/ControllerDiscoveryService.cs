@@ -28,7 +28,7 @@ public sealed class ControllerDiscoveryService
 
                 string SafeRead(Func<string> read, string fallback)
                 {
-                    try { return read(); }
+                    try { var value = read(); return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim(); }
                     catch { return fallback; }
                 }
 

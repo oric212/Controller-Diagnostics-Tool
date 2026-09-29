@@ -26,6 +26,8 @@ public sealed class StickDiagnostic
     public double NeutralY { get; private set; }
     public double LargestNeutralDeviation { get; private set; }
     public string DriftStatus { get; private set; } = "Collecting neutral samples";
+    public string RestingStatus { get; private set; } = "Not enough samples";
+    public bool HasNeutralEstimate { get; private set; }
     public double MinX { get; private set; } = double.PositiveInfinity;
     public double MaxX { get; private set; } = double.NegativeInfinity;
     public double MinY { get; private set; } = double.PositiveInfinity;
@@ -60,8 +62,10 @@ public sealed class StickDiagnostic
                 LargestNeutralDeviation = Math.Max(LargestNeutralDeviation,
                     _neutral.Max(p => Math.Sqrt(p.X * p.X + p.Y * p.Y)));
                 var restingDistance = Math.Sqrt(NeutralX * NeutralX + NeutralY * NeutralY);
-                DriftStatus = restingDistance >= DiagnosticThresholds.NoticeableDrift ? "Noticeable drift"
-                    : restingDistance >= DiagnosticThresholds.MinorDrift ? "Minor drift" : "Stable";
+                RestingStatus = restingDistance >= DiagnosticThresholds.NoticeableDrift ? "Noticeable drift observed"
+                    : restingDistance >= DiagnosticThresholds.MinorDrift ? "Minor drift observed" : "Stable";
+                HasNeutralEstimate = true;
+                DriftStatus = RestingStatus;
             }
         }
         else

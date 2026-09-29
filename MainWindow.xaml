@@ -17,6 +17,25 @@
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
+        <Style TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="#47566B" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Opacity" Value="0.82"/></Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Chrome" Property="BorderBrush" Value="#4ED4CB"/></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Opacity" Value="0.38"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style TargetType="ListBoxItem">
             <Setter Property="Padding" Value="14"/>
             <Setter Property="Margin" Value="0,0,0,8"/>
@@ -29,7 +48,7 @@
             </Style.Triggers>
         </Style>
         <DataTemplate x:Key="ControlTemplate">
-            <Border Background="#202C3F" CornerRadius="8" Padding="10,7" Margin="0,0,7,7" MinWidth="100">
+            <Border CornerRadius="8" Padding="10,7" Margin="0,0,7,7" MinWidth="100">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="#202C3F"/>
@@ -50,12 +69,15 @@
         <Grid>
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="CONTROLLER LAB" Foreground="#4ED4CB" FontSize="11" FontWeight="Bold"/>
+                <TextBlock Text="DEVICE DIAGNOSTICS" Foreground="#4ED4CB" FontSize="11" FontWeight="Bold"/>
                 <TextBlock Text="Controller Diagnostics" FontSize="29" FontWeight="SemiBold" Margin="0,5,0,0"/>
-                <TextBlock Text="Live HID input and device information" Foreground="#93A3B9" FontSize="13" Margin="0,5,0,0"/>
+                <TextBlock Text="Inspect live input, neutral behavior, and control ranges" Foreground="#93A3B9" FontSize="13" Margin="0,5,0,0"/>
             </StackPanel>
-            <Button Grid.Column="1" Content="Refresh devices" Click="Refresh_Click" Padding="18,10" VerticalAlignment="Center"
-                    Background="#286E89" Foreground="White" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="ResetAllButton" Content="Reset measurements" Click="ResetMeasurements_Click" Padding="14,10" Margin="0,0,8,0" Background="#34445A"/>
+                <Button x:Name="ExportButton" Content="Export report" Click="ExportReport_Click" Padding="14,10" Margin="0,0,8,0" Background="#286E89"/>
+                <Button Content="Refresh devices" Click="Refresh_Click" Padding="14,10" Background="#34445A"/>
+            </StackPanel>
         </Grid>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions><ColumnDefinition Width="280"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -66,9 +88,10 @@
                         <ListBox x:Name="DeviceList" SelectionChanged="DeviceList_SelectionChanged" Background="Transparent" BorderThickness="0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel>
+                                    <StackPanel ToolTip="{Binding DevicePath}">
                                         <TextBlock Text="{Binding Model}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                         <TextBlock Text="{Binding Name}" Foreground="#93A3B9" FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding DevicePath}" Foreground="#71849C" FontSize="10" TextTrimming="CharacterEllipsis" MaxWidth="218" Margin="0,3,0,0"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -78,7 +101,7 @@
                     </Grid>
                 </DockPanel>
             </Border>
-            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer x:Name="DetailsScroll" Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
@@ -88,6 +111,26 @@
                             <TextBlock x:Name="ConfidenceText" Foreground="#93A3B9" FontSize="11" Margin="0,4,0,0"/>
                             <TextBlock x:Name="DeviceInfo" Foreground="#AFC2D5" FontSize="12" Margin="0,14,0,0" TextWrapping="Wrap"/>
                             <TextBlock x:Name="DevicePath" Foreground="#71849C" FontSize="10" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                        <StackPanel>
+                            <TextBlock Text="DIAGNOSTICS SUMMARY" Style="{StaticResource Section}"/>
+                            <TextBlock x:Name="SummaryModel" Text="No controller selected" FontSize="17" FontWeight="SemiBold" Margin="0,9,0,0" TextWrapping="Wrap"/>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,15,0">
+                                    <TextBlock x:Name="SummaryConnection" Text="Connection: No device selected" Foreground="#93A3B9" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="SummaryControls" Text="Controls: Unavailable" Foreground="#AFC2D5" TextWrapping="Wrap" Margin="0,7,0,0"/>
+                                    <TextBlock x:Name="SummaryLeft" Text="Left stick: Unmapped" Foreground="#AFC2D5" TextWrapping="Wrap" Margin="0,7,0,0"/>
+                                    <TextBlock x:Name="SummaryRight" Text="Right stick: Unmapped" Foreground="#AFC2D5" TextWrapping="Wrap" Margin="0,7,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock x:Name="SummaryDeadZones" Text="Dead zones: 8% / 8%" Foreground="#AFC2D5" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="SummaryRanges" Text="Stick ranges: Unavailable" Foreground="#AFC2D5" TextWrapping="Wrap" Margin="0,7,0,0"/>
+                                    <TextBlock x:Name="SummaryTriggers" Text="Trigger ranges: Unavailable" Foreground="#AFC2D5" TextWrapping="Wrap" Margin="0,7,0,0"/>
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Card}" Margin="0,14,0,0">
@@ -111,7 +154,7 @@
         </Canvas>
         <TextBlock x:Name="LeftPosition" Text="X 0.00  Y 0.00  |  Radius 0.00" HorizontalAlignment="Center" FontSize="12" Margin="0,10,0,0"/>
         <TextBlock x:Name="LeftZoneText" Text="Dead zone 8%  |  Inside" Foreground="#AFC2D5" FontSize="12" Margin="0,12,0,0"/>
-        <Slider x:Name="LeftDeadZone" Minimum="0" Maximum="0.4" Value="0.08" ValueChanged="DeadZone_Changed" Margin="0,6,0,0"/>
+        <Slider x:Name="LeftDeadZone" Minimum="0" Maximum="0.4" Value="0.08" ValueChanged="DeadZone_Changed" AutoToolTipPlacement="TopLeft" AutoToolTipPrecision="2" Margin="0,6,0,0"/>
         <TextBlock x:Name="LeftNeutral" Text="Neutral: collecting samples" Foreground="#93A3B9" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"/>
         <TextBlock x:Name="LeftObserved" Text="Observed range: waiting" Foreground="#93A3B9" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"/>
         <TextBlock x:Name="LeftTest" Text="Range test: not started" Foreground="#AFC2D5" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"/>
@@ -136,7 +179,7 @@
         </Canvas>
         <TextBlock x:Name="RightPosition" Text="X 0.00  Y 0.00  |  Radius 0.00" HorizontalAlignment="Center" FontSize="12" Margin="0,10,0,0"/>
         <TextBlock x:Name="RightZoneText" Text="Dead zone 8%  |  Inside" Foreground="#AFC2D5" FontSize="12" Margin="0,12,0,0"/>
-        <Slider x:Name="RightDeadZone" Minimum="0" Maximum="0.4" Value="0.08" ValueChanged="DeadZone_Changed" Margin="0,6,0,0"/>
+        <Slider x:Name="RightDeadZone" Minimum="0" Maximum="0.4" Value="0.08" ValueChanged="DeadZone_Changed" AutoToolTipPlacement="TopLeft" AutoToolTipPrecision="2" Margin="0,6,0,0"/>
         <TextBlock x:Name="RightNeutral" Text="Neutral: collecting samples" Foreground="#93A3B9" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"/>
         <TextBlock x:Name="RightObserved" Text="Observed range: waiting" Foreground="#93A3B9" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"/>
         <TextBlock x:Name="RightTest" Text="Range test: not started" Foreground="#AFC2D5" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"/>
@@ -194,6 +237,6 @@
                 </StackPanel>
             </ScrollViewer>
         </Grid>
-        <TextBlock x:Name="StatusText" Grid.Row="3" Foreground="#93A3B9" FontSize="12" Margin="0,14,0,0"/>
+        <TextBlock x:Name="StatusText" Grid.Row="3" Foreground="#93A3B9" FontSize="12" Margin="0,14,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
     </Grid>
 </Window>
