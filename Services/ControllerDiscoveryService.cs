@@ -6,6 +6,7 @@ namespace Controller_Diagnostics_Tool.Services;
 
 public sealed class ControllerDiscoveryService
 {
+    private readonly ControllerRecognitionService _recognition = new();
     public IReadOnlyList<ControllerDevice> Scan()
     {
         var results = new List<ControllerDevice>();
@@ -31,9 +32,14 @@ public sealed class ControllerDiscoveryService
                     catch { return fallback; }
                 }
 
-                var name = SafeRead(() => device.GetFriendlyName(), "Unknown controller");
+                var name = SafeRead(() => device.GetProductName(), "Unknown controller");
+                if (device.VendorID == 0x3434 && name.Equals("Keychron Link", StringComparison.OrdinalIgnoreCase)) continue;
+                var model = _recognition.Recognize(device, name);
                 results.Add(new ControllerDevice(
                     string.IsNullOrWhiteSpace(name) ? "Unknown controller" : name,
+                    model.Model,
+                    model.Family,
+                    model.Certain,
                     SafeRead(() => device.GetManufacturer(), "Unknown"),
                     kind,
                     $"0x{device.VendorID:X4}",

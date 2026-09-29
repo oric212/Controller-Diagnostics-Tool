@@ -2,6 +2,9 @@ namespace Controller_Diagnostics_Tool.Models;
 
 public sealed record ControllerDevice(
     string Name,
+    string Model,
+    string Family,
+    bool ModelIsCertain,
     string Manufacturer,
     string Kind,
     string VendorId,
