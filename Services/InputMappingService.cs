@@ -10,9 +10,11 @@ public static class InputMappingService
         var usage = value.Usages.FirstOrDefault();
         var page = usage >> 16;
         var id = usage & 0xFFFF;
-        var raw = value.GetLogicalValue();
         var item = value.DataItem;
-        var range = (double)item.LogicalMaximum - item.LogicalMinimum;
+        var raw = value.IsNull ? item.LogicalMinimum - 1 : value.GetLogicalValue();
+        var maximum = !item.IsLogicalSigned && item.LogicalMaximum < item.LogicalMinimum
+            ? Math.Pow(2, item.ElementBits) - 1 : item.LogicalMaximum;
+        var range = maximum - item.LogicalMinimum;
         var fraction = range > 0 ? Math.Clamp((raw - item.LogicalMinimum) / range, 0, 1) : 0;
         if (page == 9)
         {
