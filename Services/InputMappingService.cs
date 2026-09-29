@@ -16,6 +16,9 @@ public static class InputMappingService
             ? Math.Pow(2, item.ElementBits) - 1 : item.LogicalMaximum;
         var range = maximum - item.LogicalMinimum;
         var fraction = range > 0 ? Math.Clamp((raw - item.LogicalMinimum) / range, 0, 1) : 0;
+        // Generic Device Controls / Battery Strength (HID Usage Tables 0x06:0x20).
+        if (usage == 0x00060020 && range > 0 && !value.IsNull)
+            return new InputControl("Battery level", "Battery", fraction, $"{fraction:P0}", true, false);
         if (page == 9)
         {
             var number = id == 0 ? (uint)(index + 1) : id;
@@ -48,5 +51,19 @@ public static class InputMappingService
         // Z, Rz, sliders and vendor usages vary between controllers; expose them without guessing.
         var rawLabel = usage == 0 ? "Field " + index : usage == (uint)Usage.GenericDesktopZ ? "Raw Z axis" : $"Usage 0x{page:X2}:0x{id:X2}";
         return new InputControl(rawLabel, "Raw axes / controls", fraction, raw.ToString(), false, raw != item.LogicalMinimum);
+    }
+    // The 2DC8:3106 receiver exposes LT and RT as opposite halves of one Z axis.
+    // The two values cannot represent simultaneous trigger pressure independently.
+    public static IReadOnlyList<InputControl> Map8BitDoCombinedTriggers(double fraction)
+    {
+        var left = Math.Clamp((fraction - 0.5) * 2, 0, 1);
+        var right = Math.Clamp((0.5 - fraction) * 2, 0, 1);
+        if (left < 0.005) left = 0;
+        if (right < 0.005) right = 0;
+        return
+        [
+            new InputControl("Left trigger", "Triggers", left, $"{left:P0}", true, left > 0.05),
+            new InputControl("Right trigger", "Triggers", right, $"{right:P0}", true, right > 0.05)
+        ];
     }
 }

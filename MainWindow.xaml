@@ -58,7 +58,7 @@
                     </Style>
                 </Border.Style>
                 <StackPanel>
-                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" FontSize="12"/>
+                    <TextBlock Text="{Binding Label}" Foreground="#EAF0FA" FontWeight="SemiBold" FontSize="12"/>
                     <TextBlock Text="{Binding Display}" Foreground="#AFC2D5" FontSize="11" Margin="0,3,0,0"/>
                 </StackPanel>
             </Border>
@@ -85,7 +85,7 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="CONNECTED DEVICES" Style="{StaticResource Section}" Margin="0,0,0,16"/>
                     <Grid>
-                        <ListBox x:Name="DeviceList" SelectionChanged="DeviceList_SelectionChanged" Background="Transparent" BorderThickness="0">
+                        <ListBox x:Name="DeviceList" SelectionChanged="DeviceList_SelectionChanged" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel ToolTip="{Binding DevicePath}">
@@ -111,6 +111,100 @@
                             <TextBlock x:Name="ConfidenceText" Foreground="#93A3B9" FontSize="11" Margin="0,4,0,0"/>
                             <TextBlock x:Name="DeviceInfo" Foreground="#AFC2D5" FontSize="12" Margin="0,14,0,0" TextWrapping="Wrap"/>
                             <TextBlock x:Name="DevicePath" Foreground="#71849C" FontSize="10" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                        <StackPanel>
+                            <TextBlock Text="CONTROLLER VIEW" Style="{StaticResource Section}"/>
+                            <TextBlock x:Name="ButtonLayoutNote" Text="Xbox-style layout; button positions are illustrative." Foreground="#93A3B9" FontSize="11" Margin="0,5,0,10"/>
+                            <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" MaxWidth="400">
+                                <Canvas Width="440" Height="330">
+                                    <TextBlock Text="LT" Canvas.Left="105" Canvas.Top="0" Foreground="#A7B4C2" FontSize="9" FontWeight="Bold"/>
+                                    <Border x:Name="LayoutLTFrame" Canvas.Left="72" Canvas.Top="13" Width="80" Height="5" CornerRadius="3" Background="#56636F" ToolTip="LT: no mapped input">
+                                        <Border x:Name="LayoutLTLevel" HorizontalAlignment="Left" Width="0" CornerRadius="3" Background="#4ED4CB"/>
+                                    </Border>
+                                    <TextBlock Text="RT" Canvas.Left="316" Canvas.Top="0" Foreground="#A7B4C2" FontSize="9" FontWeight="Bold"/>
+                                    <Border x:Name="LayoutRTFrame" Canvas.Left="282" Canvas.Top="13" Width="80" Height="5" CornerRadius="3" Background="#56636F" ToolTip="RT: no mapped input">
+                                        <Border x:Name="LayoutRTLevel" HorizontalAlignment="Left" Width="0" CornerRadius="3" Background="#4ED4CB"/>
+                                    </Border>
+
+                                    <Border x:Name="LayoutLB" Canvas.Left="67" Canvas.Top="18" Width="91" Height="45" CornerRadius="28" Background="#727980" ToolTip="LB / HID Button 5"/>
+                                    <Border x:Name="LayoutRB" Canvas.Left="277" Canvas.Top="18" Width="91" Height="45" CornerRadius="28" Background="#727980" ToolTip="RB / HID Button 6"/>
+                                    <Path Data="M 113,36 C 81,40 61,52 53,79 C 32,130 9,185 8,222 C 3,258 10,279 24,289 L 47,302 C 62,303 75,285 94,265 L 119,241 C 129,232 138,228 158,228 L 278,228 C 298,228 308,237 320,248 L 355,286 C 369,299 382,303 392,294 C 415,278 423,258 422,224 C 421,183 396,108 377,68 C 369,50 356,44 325,37 C 288,29 263,27 221,27 C 171,27 146,29 113,36 Z"
+                                          Fill="#191B1E" Stroke="#444B54" StrokeThickness="1.5" StrokeLineJoin="Round"/>
+                                    <Ellipse Canvas.Left="198" Canvas.Top="43" Width="28" Height="28" Fill="#E7EBEE" Stroke="#78818B" StrokeThickness="1"/>
+                                    <Ellipse Canvas.Left="80" Canvas.Top="74" Width="56" Height="56" Fill="#2E3136"/>
+                                    <Border x:Name="LayoutLeftStickHead" Canvas.Left="84" Canvas.Top="78" Width="48" Height="48" CornerRadius="24" Background="#898F94" BorderBrush="#AFB6BC" BorderThickness="1.5" ToolTip="Left stick movement and click">
+                                        <TextBlock x:Name="LayoutLeftStickText" Text="LS" Foreground="#252B31" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Ellipse Canvas.Left="238" Canvas.Top="132" Width="58" Height="58" Fill="#2E3136"/>
+                                    <Border x:Name="LayoutRightStickHead" Canvas.Left="242" Canvas.Top="136" Width="50" Height="50" CornerRadius="25" Background="#898F94" BorderBrush="#AFB6BC" BorderThickness="1.5" ToolTip="Right stick movement and click">
+                                        <TextBlock x:Name="LayoutRightStickText" Text="RS" Foreground="#252B31" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Rectangle x:Name="LayoutDpadUp" Canvas.Left="151" Canvas.Top="143" Width="20" Height="20" RadiusX="4" RadiusY="4" Fill="#8D9398"/>
+                                    <Rectangle x:Name="LayoutDpadLeft" Canvas.Left="131" Canvas.Top="163" Width="20" Height="20" RadiusX="4" RadiusY="4" Fill="#8D9398"/>
+                                    <Rectangle x:Name="LayoutDpadRight" Canvas.Left="171" Canvas.Top="163" Width="20" Height="20" RadiusX="4" RadiusY="4" Fill="#8D9398"/>
+                                    <Rectangle x:Name="LayoutDpadDown" Canvas.Left="151" Canvas.Top="183" Width="20" Height="20" RadiusX="4" RadiusY="4" Fill="#8D9398"/>
+                                    <Rectangle Canvas.Left="151" Canvas.Top="163" Width="20" Height="20" Fill="#8D9398"/>
+                                    <Ellipse x:Name="LayoutView" Canvas.Left="176" Canvas.Top="96" Width="18" Height="18" Fill="#858B91" ToolTip="View / HID Button 7 when mapped"/>
+                                    <Ellipse x:Name="LayoutMenu" Canvas.Left="236" Canvas.Top="96" Width="18" Height="18" Fill="#858B91" ToolTip="Menu / HID Button 8 when mapped"/>
+                                    <Border x:Name="LayoutBatteryFrame" Canvas.Left="184" Canvas.Top="257" Width="64" Height="22" CornerRadius="3" Background="#29343F" BorderBrush="#A8B0B8" BorderThickness="1.5" ToolTip="Battery percentage unavailable from this device">
+                                        <Grid ClipToBounds="True">
+                                            <Border x:Name="LayoutBatteryFill" HorizontalAlignment="Left" Width="0" Background="#4ED4CB"/>
+                                            <TextBlock x:Name="LayoutBatteryText" Text="N/A" Foreground="#EAF0FA" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <Rectangle Canvas.Left="249" Canvas.Top="263" Width="4" Height="10" Fill="#A8B0B8"/>
+
+                                    <ItemsControl x:Name="ButtonControls">
+                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas Width="440" Height="330"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemContainerStyle>
+                                            <Style TargetType="ContentPresenter">
+                                                <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                                <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                            </Style>
+                                        </ItemsControl.ItemContainerStyle>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Width="25" Height="25" CornerRadius="13" Background="{Binding Accent}" ToolTip="{Binding Detail}">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Opacity" Value="0.78"/>
+                                                            <Setter Property="BorderBrush" Value="#1A1E24"/>
+                                                            <Setter Property="BorderThickness" Value="1.5"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Active}" Value="True">
+                                                                    <Setter Property="Opacity" Value="1"/>
+                                                                    <Setter Property="BorderBrush" Value="#F7FAFC"/>
+                                                                    <Setter Property="BorderThickness" Value="2.5"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding Label}" Foreground="#15202A" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock x:Name="CombinedTriggerNote" Text="LT and RT share one HID axis on this receiver; simultaneous pressure cannot be measured separately." Visibility="Collapsed" Foreground="#93A3B9" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                            <ItemsControl x:Name="ExtraButtons" Margin="0,8,0,0">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="38" Height="38" CornerRadius="19" BorderBrush="#657A91" BorderThickness="1.5" Margin="0,0,8,8" ToolTip="{Binding Detail}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#34475E"/>
+                                                    <Style.Triggers><DataTrigger Binding="{Binding Active}" Value="True"><Setter Property="Background" Value="#1EA8A0"/></DataTrigger></Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding Label}" Foreground="#F4FAFF" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Card}" Margin="0,14,0,0">
@@ -195,14 +289,6 @@
                     </Border>
                     <Border Style="{StaticResource Card}" Margin="0,14,0,0">
                         <StackPanel>
-                            <TextBlock Text="BUTTONS &amp; D-PAD" Style="{StaticResource Section}"/>
-                            <ItemsControl x:Name="ButtonControls" ItemTemplate="{StaticResource ControlTemplate}" Margin="0,14,0,0">
-                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                            </ItemsControl>
-                        </StackPanel>
-                    </Border>
-                    <Border Style="{StaticResource Card}" Margin="0,14,0,0">
-                        <StackPanel>
                             <TextBlock Text="TRIGGERS" Style="{StaticResource Section}" Margin="0,0,0,8"/>
                             <StackPanel x:Name="TriggerPanel"/>
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -226,7 +312,7 @@
                                         <Grid Margin="0,0,0,7">
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding TimeLabel}" Foreground="#71849C" FontSize="11"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Control}" FontSize="12"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Control}" Foreground="#EAF0FA" FontSize="12"/>
                                             <TextBlock Grid.Column="2" Text="{Binding State}" Foreground="#4ED4CB" FontSize="12"/>
                                         </Grid>
                                     </DataTemplate>

@@ -95,6 +95,13 @@ public sealed class ControllerInputService : IDisposable
                             controls.Add(InputMappingService.Map(value, i, selected.Family));
                         }
                     }
+                    if (selected.VendorId == "0x2DC8" && selected.ProductId == "0x3106" &&
+                        controls.FirstOrDefault(c => c.Label == "Raw Z axis") is { } combinedTriggerAxis)
+                    {
+                        var rawIndex = controls.IndexOf(combinedTriggerAxis);
+                        controls[rawIndex] = combinedTriggerAxis with { Active = Math.Abs(combinedTriggerAxis.Value - 0.5) > 0.05 };
+                        controls.AddRange(InputMappingService.Map8BitDoCombinedTriggers(combinedTriggerAxis.Value));
+                    }
                     if ((DateTime.UtcNow - lastUpdate).TotalMilliseconds < 33) continue;
                     lastUpdate = DateTime.UtcNow;
                     Updated?.Invoke(selected.DevicePath, controls);

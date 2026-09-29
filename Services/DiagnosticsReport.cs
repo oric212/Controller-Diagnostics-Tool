@@ -28,6 +28,8 @@ public static class DiagnosticsReport
         b.AppendLine($"Manufacturer: {ValueOrUnavailable(device.Manufacturer)}");
         b.AppendLine($"Vendor ID: {device.VendorId}    Product ID: {device.ProductId}");
         b.AppendLine($"HID type: {device.Kind}");
+        var battery = controls.FirstOrDefault(c => c.Group == "Battery" && c.Mapped);
+        b.AppendLine($"Battery: {(battery is null ? "Unavailable" : battery.Value.ToString("P0", culture) + " (HID Battery Strength)")}");
         b.AppendLine($"Serial: {ValueOrUnavailable(device.SerialNumber)}");
         b.AppendLine($"Device path: {ValueOrUnavailable(device.DevicePath)}");
         b.AppendLine();
@@ -75,6 +77,10 @@ public static class DiagnosticsReport
         b.AppendLine("Drift labels are indicative measurements from a short steady resting window; they do not diagnose a defect.");
         b.AppendLine("Dead-zone settings in this application are visual diagnostics and do not change the controller or Windows.");
         b.AppendLine("HID usages do not always reveal a physical control's role. Uncertain axes remain raw.");
+        if (battery is null)
+            b.AppendLine("Battery percentage was not exposed through the available HID input reports.");
+        if (device.VendorId == "0x2DC8" && device.ProductId == "0x3106")
+            b.AppendLine("This receiver combines LT and RT on one HID axis; simultaneous trigger pressure cannot be measured separately.");
         if (!device.ModelIsCertain)
             b.AppendLine("The exact physical controller model was not confirmed from the available device information.");
         return b.ToString();

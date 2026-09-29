@@ -114,6 +114,8 @@ public partial class MainWindow : Window
             ? "Model matched by vendor and product ID" : "Family or model is an estimate";
         DeviceInfo.Text = device is null ? "" : $"{device.Name}  |  {device.Manufacturer}  |  VID {device.VendorId} / PID {device.ProductId}";
         DevicePath.Text = device?.DevicePath ?? "";
+        CombinedTriggerNote.Visibility = device?.VendorId == "0x2DC8" && device.ProductId == "0x3106"
+            ? Visibility.Visible : Visibility.Collapsed;
         ResetAllButton.IsEnabled = ExportButton.IsEnabled = device is not null;
         RenderInputs();
         if (device is not null) _input.Start(device);
@@ -129,7 +131,7 @@ public partial class MainWindow : Window
 
     private void RenderInputs()
     {
-        ButtonControls.ItemsSource = _lastControls.Where(c => c.Group is "Buttons" or "D-pad").ToArray();
+        RenderButtons();
         RawControls.ItemsSource = _lastControls.Where(c => !c.Mapped).Select(c =>
         {
             return _diagnostics.RawRanges.TryGetValue(c.Label, out var range)
@@ -138,9 +140,83 @@ public partial class MainWindow : Window
         }).ToArray();
         RenderStick("Left", _diagnostics.Left);
         RenderStick("Right", _diagnostics.Right);
+        RenderControllerSticks();
         RenderTriggers();
         HistoryList.ItemsSource = _diagnostics.History.ToArray();
         RenderSummary();
+    }
+
+    private static readonly (string Label, double X, double Y, string Accent)[] XboxFaceLayout =
+    [
+        ("A", 309, 120, "#6FCD78"), ("B", 336, 93, "#EC6669"),
+        ("X", 281, 93, "#52A9EC"), ("Y", 309, 66, "#F0CF58")
+    ];
+
+    private static readonly Brush DpadNeutral = new SolidColorBrush(Color.FromRgb(141, 147, 152));
+    private static readonly Brush ButtonNeutral = new SolidColorBrush(Color.FromRgb(114, 121, 128));
+    private static readonly Brush SmallButtonNeutral = new SolidColorBrush(Color.FromRgb(133, 139, 145));
+    private static readonly Brush StickNeutral = new SolidColorBrush(Color.FromRgb(137, 143, 148));
+
+    private void RenderButtons()
+    {
+        var device = DeviceList.SelectedItem as ControllerDevice;
+        var verifiedReceiver = device is not null && device.VendorId == "0x2DC8" && device.ProductId == "0x3106";
+        var xboxLabels = verifiedReceiver || device?.Family == "Xbox";
+        ButtonLayoutNote.Text = verifiedReceiver
+            ? "Xbox layout; this receiver's button order was checked with the paired controller."
+            : device?.Family == "Xbox"
+                ? "Xbox layout using common HID button order; individual devices may vary."
+                : "Xbox-style view; numbered HID buttons have illustrative positions.";
+
+        var dpad = _lastControls.FirstOrDefault(c => c.Group == "D-pad")?.Display ?? "";
+        LayoutDpadUp.Fill = dpad.Contains("Up", StringComparison.OrdinalIgnoreCase) ? Brushes.MediumTurquoise : DpadNeutral;
+        LayoutDpadRight.Fill = dpad.Contains("Right", StringComparison.OrdinalIgnoreCase) ? Brushes.MediumTurquoise : DpadNeutral;
+        LayoutDpadDown.Fill = dpad.Contains("Down", StringComparison.OrdinalIgnoreCase) ? Brushes.MediumTurquoise : DpadNeutral;
+        LayoutDpadLeft.Fill = dpad.Contains("Left", StringComparison.OrdinalIgnoreCase) ? Brushes.MediumTurquoise : DpadNeutral;
+
+        bool Pressed(int number) => _lastControls.Any(c => c.Label == "Button " + number && c.Active);
+        LayoutLB.Background = xboxLabels && Pressed(5) ? Brushes.MediumTurquoise : ButtonNeutral;
+        LayoutRB.Background = xboxLabels && Pressed(6) ? Brushes.MediumTurquoise : ButtonNeutral;
+        LayoutView.Fill = xboxLabels && Pressed(7) ? Brushes.MediumTurquoise : SmallButtonNeutral;
+        LayoutMenu.Fill = xboxLabels && Pressed(8) ? Brushes.MediumTurquoise : SmallButtonNeutral;
+        LayoutLeftStickHead.Background = xboxLabels && Pressed(9) ? Brushes.MediumTurquoise : StickNeutral;
+        LayoutRightStickHead.Background = xboxLabels && Pressed(10) ? Brushes.MediumTurquoise : StickNeutral;
+        LayoutLeftStickText.Text = xboxLabels ? "LS" : "";
+        LayoutRightStickText.Text = xboxLabels ? "RS" : "";
+
+        var indicators = new List<ControllerButtonIndicator>();
+        var extras = new List<ControllerButtonIndicator>();
+        foreach (var button in _lastControls.Where(c => c.Group == "Buttons"))
+        {
+            var rawNumber = button.Label.Replace("Button ", "");
+            if (!int.TryParse(rawNumber, out var number) || number < 1)
+            {
+                extras.Add(new(rawNumber, button.Label + ": " + button.Display, button.Active, 0, 0, "#899198"));
+                continue;
+            }
+            if (number <= XboxFaceLayout.Length)
+            {
+                var (mappedLabel, x, y, accent) = XboxFaceLayout[number - 1];
+                var label = xboxLabels ? mappedLabel : rawNumber;
+                var detail = xboxLabels ? mappedLabel + " (" + button.Label + "): " + button.Display
+                    : button.Label + ": " + button.Display;
+                indicators.Add(new(label, detail, button.Active, x, y, xboxLabels ? accent : "#899198"));
+            }
+            else if (!xboxLabels || number > 10)
+                extras.Add(new(rawNumber, button.Label + ": " + button.Display, button.Active, 0, 0, "#899198"));
+        }
+        ButtonControls.ItemsSource = indicators;
+        ExtraButtons.ItemsSource = extras;
+    }
+
+    private void RenderControllerSticks()
+    {
+        Canvas.SetLeft(LayoutLeftStickHead, 84 + _diagnostics.Left.X * 5);
+        Canvas.SetTop(LayoutLeftStickHead, 78 + _diagnostics.Left.Y * 5);
+        Canvas.SetLeft(LayoutRightStickHead, 242 + _diagnostics.Right.X * 5);
+        Canvas.SetTop(LayoutRightStickHead, 136 + _diagnostics.Right.Y * 5);
+        LayoutLeftStickHead.Opacity = _diagnostics.Left.Available && _connectionState == "Live input" ? 1 : 0.55;
+        LayoutRightStickHead.Opacity = _diagnostics.Right.Available && _connectionState == "Live input" ? 1 : 0.55;
     }
 
     private void RenderStick(string side, StickDiagnostic stick)
@@ -212,8 +288,32 @@ public partial class MainWindow : Window
         }
         TriggerStartButton.Content = _diagnostics.Triggers.Values.Any(t => t.Testing) ? "Stop trigger test" : "Start trigger test";
         TriggerStartButton.IsEnabled = _diagnostics.Triggers.Count > 0;
+        RenderControllerTriggers();
     }
 
+    private void RenderControllerTriggers()
+    {
+        _diagnostics.Triggers.TryGetValue("Left trigger", out var left);
+        _diagnostics.Triggers.TryGetValue("Right trigger", out var right);
+        LayoutLTLevel.Width = 80 * (left?.Value ?? 0);
+        LayoutRTLevel.Width = 80 * (right?.Value ?? 0);
+        LayoutLTFrame.Opacity = left is null ? 0.5 : 1;
+        LayoutRTFrame.Opacity = right is null ? 0.5 : 1;
+        LayoutLTFrame.ToolTip = left is null ? "LT: no mapped input" : $"LT: {left.Value:P0}";
+        LayoutRTFrame.ToolTip = right is null ? "RT: no mapped input" : $"RT: {right.Value:P0}";
+    }
+
+    private void RenderBattery()
+    {
+        var battery = _lastControls.FirstOrDefault(c => c.Group == "Battery" && c.Mapped);
+        var available = battery is not null && _connectionState == "Live input";
+        var fraction = available ? Math.Clamp(battery!.Value, 0, 1) : 0;
+        LayoutBatteryFill.Width = 61 * fraction;
+        LayoutBatteryText.Text = available ? $"{fraction:P0}" : "N/A";
+        LayoutBatteryFrame.ToolTip = available
+            ? $"Battery strength reported by HID: {fraction:P0}"
+            : "Battery percentage unavailable from this device";
+    }
     private void RenderSummary()
     {
         var device = DeviceList.SelectedItem as ControllerDevice;
@@ -289,6 +389,7 @@ public partial class MainWindow : Window
         _diagnostics.Right.DeadZone = RightDeadZone.Value;
         RenderStick("Left", _diagnostics.Left);
         RenderStick("Right", _diagnostics.Right);
+        RenderControllerSticks();
         RenderSummary();
     }
     private void StickTest_Click(object sender, RoutedEventArgs e)
@@ -317,3 +418,5 @@ public partial class MainWindow : Window
         RenderTriggers();
     }
 }
+
+public sealed record ControllerButtonIndicator(string Label, string Detail, bool Active, double X, double Y, string Accent);
